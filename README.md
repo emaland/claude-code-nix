@@ -12,7 +12,7 @@ While both this flake and upstream nixpkgs provide Claude Code as a Nix package,
 
 1. **Immediate Updates**: New Claude Code versions available within 1 hour of release
 2. **Dedicated Maintenance**: Focused repository for quick fixes when Claude Code changes
-3. **Flake-First Design**: Direct flake usage with Cachix binary cache
+3. **Flake-First Design**: Direct flake usage with automated CI
 4. **Custom Wrapper Control**: Ready to adapt when Claude Code adds new validations or requirements
 5. **Native Binary Default**: Self-contained binary with no runtime dependencies, plus Node.js and Bun alternatives
 
@@ -40,7 +40,7 @@ While nixpkgs provides Claude Code, the update cycle can be slow:
 This repository provides:
 
 - **Hourly Automated Updates**: GitHub Actions checks for new versions every hour
-- **Instant Availability**: Updates are automatically built and cached to Cachix
+- **Instant Availability**: Updates are automatically built and tested
 - **Quick Fixes**: When Claude Code breaks or adds new requirements, we can fix immediately
 - **Node.js 22 LTS**: We control the runtime version (upstream locked to Node.js 20)
 - **Runtime Choice**: Both Node.js and Bun runtimes available
@@ -52,7 +52,7 @@ While Claude Code exists in nixpkgs, our approach offers specific advantages:
 1. **Always Latest Version**: Hourly automated checks vs waiting for nixpkgs PR reviews and merges
 2. **Native Binary Default**: Self-contained ~180MB binary with no runtime dependencies
 3. **Runtime Flexibility**: Choose between native binary, Node.js 22 LTS, or Bun
-4. **Flake with Binary Cache**: Direct flake usage with Cachix means instant installation
+4. **Flake-First Design**: Direct flake usage with automated CI builds
 5. **Dedicated Repository**: Focused maintenance without the complexity of nixpkgs contribution process
 
 ### Comparison Table
@@ -63,7 +63,7 @@ While Claude Code exists in nixpkgs, our approach offers specific advantages:
 | **Runtime Options** | ⚠️ Per Node install | 🔒 Node.js 20 | ✅ Native, Node.js 22, or Bun |
 | **No Runtime Dependency** | ❌ Requires Node.js | ❌ Bundles Node.js | ✅ Native binary (default) |
 | **Survives Node Switch** | ❌ Lost on switch | ✅ Always available | ✅ Always available |
-| **Binary Cache** | ❌ None | ✅ NixOS cache | ✅ Cachix |
+| **Binary Cache** | ❌ None | ✅ NixOS cache | ⚠️ Build from source |
 | **Declarative Config** | ❌ None | ✅ Yes | ✅ Yes |
 | **Version Pinning** | ⚠️ Manual | ✅ Channel-based | ✅ Git tags (v2.0.76, v2, latest) |
 | **Update Frequency** | ✅ Immediate | ⚠️ Weeks | ✅ < 1 hour |
@@ -73,7 +73,6 @@ While Claude Code exists in nixpkgs, our approach offers specific advantages:
 ### Key Features
 
 - **Always Up-to-Date**: Automated hourly checks and updates via GitHub Actions
-- **Pre-built Binaries**: Cachix provides instant installation without compilation
 - **Flake-native**: Modern Nix flake for composable, reproducible deployments
 - **Home Manager Example**: Sample configuration for permission persistence on macOS
 - **Custom Build Process**: Optimized for Claude Code's specific requirements
@@ -243,29 +242,6 @@ pkgs.claude-code-bun.override { bunBinName = "cc-bun"; }
 | `nativeBinName` | `claude` | Binary name for native runtime |
 | `nodeBinName` | `claude-node` | Binary name for Node.js runtime |
 | `bunBinName` | `claude-bun` | Binary name for Bun runtime |
-
-### Optional: Enable Binary Cache for Faster Installation
-
-To download pre-built binaries instead of compiling:
-
-```bash
-# Install cachix if you haven't already
-nix-env -iA cachix -f https://cachix.org/api/v1/install
-
-# Configure the claude-code cache
-cachix use claude-code
-```
-
-Or add to your Nix configuration:
-
-```nix
-{
-  nix.settings = {
-    substituters = [ "https://claude-code.cachix.org" ];
-    trusted-public-keys = [ "claude-code.cachix.org-1:YeXf2aNu7UTX8Vwrze0za1WEDS+4DuI2kVeWEE4fsRk=" ];
-  };
-}
-```
 
 #### Using Nix Flakes
 

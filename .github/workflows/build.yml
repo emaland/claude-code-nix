@@ -1,4 +1,4 @@
-name: "Build and Cache"
+name: "Build and Test"
 on:
   push:
     branches: [ main ]
@@ -35,12 +35,6 @@ jobs:
       env:
         NIX_FIRST_BUILD_UID: 400
 
-    - uses: cachix/cachix-action@v15
-      if: github.ref == 'refs/heads/main'
-      with:
-        name: claude-code
-        authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
-
     - name: Build all variants
       run: |
         echo "Building claude-code (native)..."
@@ -49,13 +43,6 @@ jobs:
         nix build .#claude-code-node -o result-node
         echo "Building claude-code-bun..."
         nix build .#claude-code-bun -o result-bun
-
-    - name: Push to Cachix
-      if: github.ref == 'refs/heads/main'
-      run: |
-        nix build .#claude-code --json | jq -r '.[].outputs.out' | cachix push claude-code
-        nix build .#claude-code-node --json | jq -r '.[].outputs.out' | cachix push claude-code
-        nix build .#claude-code-bun --json | jq -r '.[].outputs.out' | cachix push claude-code
 
     - name: Test all variants
       run: |
