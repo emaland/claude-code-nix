@@ -30,7 +30,7 @@
 }:
 
 let
-  version = "2.1.193";
+  version = "2.1.241";
 
   # Platform mapping for native binaries (Nix system -> Anthropic platform)
   platformMap = {
@@ -44,10 +44,10 @@ let
 
   # Native binary hashes per platform
   nativeHashes = {
-    "darwin-arm64" = "1zqqm08x35z3vfpaiz5y5q3b6235qipgs9kj4ff03nas70q3llgp";
-    "darwin-x64" = "1s0ypwd8h3k8frlg2j4zngci8qcg84np01h4b7kzidcarayw79fb";
-    "linux-x64" = "07bbsqyxg0r9y2md8044prgg3q71wiyz55rq3w89mg8qky94vw69";
-    "linux-arm64" = "0j1l2nq606zcs10xv95r5mp94vm9rm9n87x8f54fnpkr5vk4qi9r";
+    "darwin-arm64" = "03c2cig7kw8wbjzc4aw0ijis88ld95nqplqwbwglbd6k89yfp58l";
+    "darwin-x64" = "03f12q9qzsw0590zhgcclfa13xlsysb4vwbnnksmwj36rv5bh0fg";
+    "linux-x64" = "1f1pf2yb7k0xr3w49wbqa223c6lyabv9j17wh5jvg0pzdj3bsw87";
+    "linux-arm64" = "1zm2jklav8xz9bkdm4v2b2i1z066bfj6sra6xs5fzn5y7s4wpc1d";
   };
 
   # Native binary URL
