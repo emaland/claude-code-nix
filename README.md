@@ -172,6 +172,8 @@ For multi-user Nix installations, the PATH is typically configured by `/etc/prof
 
 This flake supports three runtime options. Native binary is the default.
 
+> **Note:** As of Claude Code 2.x, the upstream npm package no longer ships a runnable JavaScript entry point — it is a thin launcher around a prebuilt native binary. All three package variants therefore install the same self-contained native binary; `claude-code-node` and `claude-code-bun` are retained as compatibility aliases (the `claude-node` / `claude-bun` command names continue to work).
+
 | Runtime | Package | Binary | Command |
 |---------|---------|--------|---------|
 | Native Binary (default) | `claude-code` | `claude` | `nix run .#claude-code` |

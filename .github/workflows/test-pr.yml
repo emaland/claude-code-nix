@@ -56,10 +56,10 @@ jobs:
           test -f ./result-native/bin/.claude-unwrapped
           echo "Verifying claude-code-node..."
           test -f ./result-node/bin/claude-node
-          test -d ./result-node/lib/node_modules/@anthropic-ai/claude-code
+          test -f ./result-node/bin/.claude-unwrapped
           echo "Verifying claude-code-bun..."
           test -f ./result-bun/bin/claude-bun
-          test -d ./result-bun/lib/node_modules/@anthropic-ai/claude-code
+          test -f ./result-bun/bin/.claude-unwrapped
 
       - name: Run basic functionality test
         run: |
