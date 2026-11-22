@@ -1,0 +1,41 @@
+name: Test Tag Updates
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/create-version-tag.yml'
+      - '.github/workflows/test-tagging.yml'
+      - 'scripts/update-moving-tags.sh'
+      - 'tests/test-update-moving-tags.sh'
+      - 'tests/test_release_workflows.py'
+      - 'flake.nix'
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/create-version-tag.yml'
+      - '.github/workflows/test-tagging.yml'
+      - 'scripts/update-moving-tags.sh'
+      - 'tests/test-update-moving-tags.sh'
+      - 'tests/test_release_workflows.py'
+      - 'flake.nix'
+
+permissions:
+  contents: read
+
+jobs:
+  test-tagging:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: Check shell syntax
+        run: bash -n scripts/update-moving-tags.sh tests/test-update-moving-tags.sh
+      - name: Test atomic tag updates
+        run: bash tests/test-update-moving-tags.sh
+      - name: Install Nix
+        uses: cachix/install-nix-action@v31.11.3
+        with:
+          extra_nix_config: |
+            experimental-features = nix-command flakes
+            access-tokens = github.com=${{ secrets.GITHUB_TOKEN }}
+      - name: Test release workflow steps
+        run: nix develop -c python3 -m unittest discover -s tests

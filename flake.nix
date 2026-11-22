@@ -3,16 +3,24 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
-    flake-utils.url = "github:numtide/flake-utils";
+    systems.url = "github:nix-systems/default";
   };
 
-  outputs = { self, nixpkgs, flake-utils }:
+  outputs =
+    { self
+    , nixpkgs
+    , systems
+    }:
     let
+      inherit (nixpkgs) lib;
+      eachSystem = f: lib.foldl' lib.recursiveUpdate { } (map f (import systems));
+
       overlay = final: prev: {
-        claude-code = final.callPackage ./package.nix { runtime = "native"; };
+        claude-code = final.callPackage ./package.nix { };
       };
     in
-    flake-utils.lib.eachDefaultSystem (system:
+    eachSystem
+      (system:
       let
         pkgs = import nixpkgs {
           inherit system;
@@ -21,12 +29,12 @@
         };
       in
       {
-        packages = {
+        packages.${system} = {
           default = pkgs.claude-code;
           claude-code = pkgs.claude-code;
         };
 
-        apps = {
+        apps.${system} = {
           default = {
             type = "app";
             program = "${pkgs.claude-code}/bin/claude";
@@ -37,13 +45,15 @@
           };
         };
 
-        devShells.default = pkgs.mkShell {
+        devShells.${system}.default = pkgs.mkShell {
           buildInputs = with pkgs; [
             nixpkgs-fmt
             nix-prefetch-git
+            cachix
+            (python3.withPackages (ps: [ ps.pyyaml ]))
           ];
         };
       }) // {
-        overlays.default = overlay;
-      };
+      overlays.default = overlay;
+    };
 }

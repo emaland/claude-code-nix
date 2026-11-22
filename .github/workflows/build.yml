@@ -1,4 +1,4 @@
-name: "Build and Test"
+name: "Build and Cache"
 on:
   push:
     branches: [ main ]
@@ -24,9 +24,9 @@ jobs:
       matrix:
         os: [ubuntu-latest, macos-latest]
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7.0.1
 
-    - uses: cachix/install-nix-action@v31
+    - uses: cachix/install-nix-action@v31.11.3
       with:
         nix_path: nixpkgs=channel:nixos-unstable
         extra_nix_config: |
@@ -35,13 +35,18 @@ jobs:
       env:
         NIX_FIRST_BUILD_UID: 400
 
-    - name: Build
-      run: |
-        echo "Building claude-code (native)..."
-        nix build .#claude-code -o result-native
+    - uses: cachix/cachix-action@v17
+      if: github.ref == 'refs/heads/main'
+      with:
+        name: claude-code
+        authToken: '${{ secrets.CACHIX_AUTH_TOKEN }}'
 
-    - name: Test
-      run: |
-        echo "Testing claude-code (native)..."
-        ./result-native/bin/claude --version
+    - name: Build claude-code
+      run: nix build .#claude-code -o result --print-build-logs
 
+    - name: Push to Cachix
+      if: github.ref == 'refs/heads/main'
+      run: nix build .#claude-code --json | jq -r '.[].outputs.out' | cachix push claude-code
+
+    - name: Test claude-code
+      run: ./result/bin/claude --version

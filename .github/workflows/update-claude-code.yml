@@ -2,7 +2,7 @@ name: Update Claude Code Version
 
 on:
   schedule:
-    - cron: '0 * * * *'  # Run every hour
+    - cron: '0 6,18 * * *'  # Run twice a day (06:00 and 18:00 UTC)
   workflow_dispatch:  # Allow manual trigger
 
 permissions:
@@ -14,12 +14,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7.0.1
         with:
           fetch-depth: 0
 
       - name: Setup Nix
-        uses: cachix/install-nix-action@v24
+        uses: cachix/install-nix-action@v31.11.3
         with:
           nix_path: nixpkgs=channel:nixos-unstable
           extra_nix_config: |
@@ -51,7 +51,7 @@ jobs:
       - name: Create Pull Request
         if: steps.check.outputs.update_needed == 'true'
         id: create-pr
-        uses: peter-evans/create-pull-request@v6
+        uses: peter-evans/create-pull-request@v8.1.1
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
           commit-message: "chore: update claude-code to version ${{ steps.check.outputs.latest }}"
@@ -87,12 +87,23 @@ jobs:
             dependencies
             automated
       
-      - name: Enable Auto-Merge
+      - name: Merge pull request
         if: steps.check.outputs.update_needed == 'true' && steps.create-pr.outputs.pull-request-number
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PULL_REQUEST_NUMBER: ${{ steps.create-pr.outputs.pull-request-number }}
         run: |
-          gh pr merge ${{ steps.create-pr.outputs.pull-request-number }} --auto --squash --delete-branch
+          # The merge has to land before this run ends: the chained build on main
+          # only fires for this run, and GitHub may still be computing mergeability.
+          for attempt in $(seq 1 12); do
+            if gh pr merge "$PULL_REQUEST_NUMBER" --squash --delete-branch; then
+              exit 0
+            fi
+            echo "Merge attempt $attempt did not succeed; retrying in 10s"
+            sleep 10
+          done
+          echo "::error::Pull request #$PULL_REQUEST_NUMBER could not be merged"
+          exit 1
 
       - name: Summary
         if: always()
