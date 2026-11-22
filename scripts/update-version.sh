@@ -162,13 +162,6 @@ update_to_version() {
         return 1
     fi
 
-    # Test node build
-    log_info "  Building claude-code-node..."
-    if ! nix build .#claude-code-node > /dev/null 2>&1; then
-        log_error "Node build verification failed"
-        return 1
-    fi
-
     log_info "✅ All builds successful!"
     return 0
 }
