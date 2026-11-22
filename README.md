@@ -14,7 +14,7 @@ While both this flake and upstream nixpkgs provide Claude Code as a Nix package,
 2. **Dedicated Maintenance**: Focused repository for quick fixes when Claude Code changes
 3. **Flake-First Design**: Direct flake usage with automated CI
 4. **Custom Wrapper Control**: Ready to adapt when Claude Code adds new validations or requirements
-5. **Native Binary Default**: Self-contained binary with no runtime dependencies, plus Node.js and Bun alternatives
+5. **Native Binary Default**: Self-contained binary with no runtime dependencies
 
 ### Why Not Just Use npm Global?
 
@@ -42,8 +42,6 @@ This repository provides:
 - **Hourly Automated Updates**: GitHub Actions checks for new versions every hour
 - **Instant Availability**: Updates are automatically built and tested
 - **Quick Fixes**: When Claude Code breaks or adds new requirements, we can fix immediately
-- **Node.js 22 LTS**: We control the runtime version (upstream locked to Node.js 20)
-- **Runtime Choice**: Both Node.js and Bun runtimes available
 
 ### Why Not Just Use Upstream nixpkgs?
 
@@ -51,16 +49,15 @@ While Claude Code exists in nixpkgs, our approach offers specific advantages:
 
 1. **Always Latest Version**: Hourly automated checks vs waiting for nixpkgs PR reviews and merges
 2. **Native Binary Default**: Self-contained ~180MB binary with no runtime dependencies
-3. **Runtime Flexibility**: Choose between native binary, Node.js 22 LTS, or Bun
-4. **Flake-First Design**: Direct flake usage with automated CI builds
-5. **Dedicated Repository**: Focused maintenance without the complexity of nixpkgs contribution process
+3. **Flake-First Design**: Direct flake usage with automated CI builds
+4. **Dedicated Repository**: Focused maintenance without the complexity of nixpkgs contribution process
 
 ### Comparison Table
 
 | Feature | npm global | nixpkgs upstream | This Flake |
 |---------|------------|------------------|------------|
 | **Latest Version** | ✅ Always | ❌ Delayed | ✅ Hourly checks |
-| **Runtime Options** | ⚠️ Per Node install | 🔒 Node.js 20 | ✅ Native, Node.js 22, or Bun |
+| **Runtime Options** | ⚠️ Per Node install | 🔒 Node.js 20 | ✅ Native binary |
 | **No Runtime Dependency** | ❌ Requires Node.js | ❌ Bundles Node.js | ✅ Native binary (default) |
 | **Survives Node Switch** | ❌ Lost on switch | ✅ Always available | ✅ Always available |
 | **Binary Cache** | ❌ None | ✅ NixOS cache | ⚠️ Build from source |
@@ -103,16 +100,6 @@ If you're not using Home Manager or NixOS, here's the complete workflow for mana
 # Native binary (default, recommended)
 nix profile install github:sadjow/claude-code-nix
 
-# Node.js runtime
-nix profile install github:sadjow/claude-code-nix#claude-code-node
-
-# Bun runtime
-nix profile install github:sadjow/claude-code-nix#claude-code-bun
-
-# Multiple runtimes (different binary names)
-nix profile install github:sadjow/claude-code-nix#claude-code       # native -> claude
-nix profile install github:sadjow/claude-code-nix#claude-code-node  # node -> claude-node
-nix profile install github:sadjow/claude-code-nix#claude-code-bun   # bun -> claude-bun
 ```
 
 ### Verify Installation
@@ -121,14 +108,6 @@ nix profile install github:sadjow/claude-code-nix#claude-code-bun   # bun -> cla
 # Native version (default)
 which claude
 claude --version
-
-# Node.js version
-which claude-node
-claude-node --version
-
-# Bun version
-which claude-bun
-claude-bun --version
 ```
 
 ### Update to Latest Version
@@ -168,63 +147,12 @@ export PATH="$HOME/.nix-profile/bin:$PATH"
 
 For multi-user Nix installations, the PATH is typically configured by `/etc/profile.d/nix.sh` or similar. Ensure your shell sources this file.
 
-## Runtime Selection
+## Runtimes
 
-This flake supports three runtime options. Native binary is the default.
-
-| Runtime | Package | Binary | Command |
-|---------|---------|--------|---------|
-| Native Binary (default) | `claude-code` | `claude` | `nix run .#claude-code` |
-| Node.js 22 LTS | `claude-code-node` | `claude-node` | `nix run .#claude-code-node` |
-| Bun | `claude-code-bun` | `claude-bun` | `nix run .#claude-code-bun` |
-
-### Quick Usage
-
-```bash
-# Default (Native binary)
-nix run github:sadjow/claude-code-nix
-
-# Node.js runtime
-nix run github:sadjow/claude-code-nix#claude-code-node
-
-# Bun runtime
-nix run github:sadjow/claude-code-nix#claude-code-bun
-```
-
-### Install Multiple Runtimes
-
-You can install multiple variants simultaneously for comparison:
-
-```bash
-nix profile install github:sadjow/claude-code-nix#claude-code
-nix profile install github:sadjow/claude-code-nix#claude-code-node
-nix profile install github:sadjow/claude-code-nix#claude-code-bun
-
-# Use any
-claude --version        # Native
-claude-node --version   # Node.js
-claude-bun --version    # Bun
-```
-
-### Using Overlay with Runtime Selection
-
-```nix
-{
-  nixpkgs.overlays = [ claude-code.overlays.default ];
-  # All packages are now available:
-  # - pkgs.claude-code (Native binary - default)
-  # - pkgs.claude-code-node (Node.js)
-  # - pkgs.claude-code-bun (Bun)
-}
-```
-
-### When to Choose Each Runtime
-
-| Choose | If you need |
-|--------|-------------|
-| **Native (default)** | Self-contained binary (~180MB), no runtime dependencies, same as official installer |
-| **Node.js** | Prefer npm ecosystem, need specific Node.js version, or debugging JS internals |
-| **Bun** | Faster startup time, lower memory footprint, newer runtime experience |
+Only the native binary (`claude-code`, binary `claude`) is supported. The
+`claude-code-node` and `claude-code-bun` variants were removed: upstream's npm
+package no longer ships `cli.js` (it is now a thin wrapper around per-platform
+native binaries), so those runtimes cannot work for recent versions.
 
 ### Custom Binary Names
 
@@ -233,15 +161,11 @@ You can customize the binary names when building:
 ```nix
 # In your flake.nix or overlay
 pkgs.claude-code.override { nativeBinName = "cc"; }
-pkgs.claude-code-node.override { nodeBinName = "cc-node"; }
-pkgs.claude-code-bun.override { bunBinName = "cc-bun"; }
 ```
 
 | Parameter | Default | Description |
 |-----------|---------|-------------|
 | `nativeBinName` | `claude` | Binary name for native runtime |
-| `nodeBinName` | `claude-node` | Binary name for Node.js runtime |
-| `bunBinName` | `claude-bun` | Binary name for Bun runtime |
 
 #### Using Nix Flakes
 
@@ -260,7 +184,7 @@ Add to your `flake.nix`:
       modules = [
         {
           nixpkgs.overlays = [ claude-code.overlays.default ];
-          environment.systemPackages = [ pkgs.claude-code ];  # or pkgs.claude-code-bun
+          environment.systemPackages = [ pkgs.claude-code ];
         }
       ];
     };
@@ -285,7 +209,7 @@ With Home Manager, add to your configuration:
       modules = [
         {
           nixpkgs.overlays = [ claude-code.overlays.default ];
-          home.packages = [ pkgs.claude-code ];  # or pkgs.claude-code-bun
+          home.packages = [ pkgs.claude-code ];
         }
       ];
     };
@@ -375,16 +299,6 @@ The wrapper scripts set these environment variables:
 - Self-contained, no runtime dependencies
 - Fastest installation (single binary download)
 
-**Node.js 22 LTS**:
-- Long-term stability and support until April 2027
-- Better performance than Node.js 20 (upstream nixpkgs version)
-- Latest LTS with all security updates
-
-**Bun**:
-- Faster startup times
-- Lower memory footprint
-- Modern runtime with excellent Node.js compatibility
-
 ## Development
 
 ```bash
@@ -394,10 +308,6 @@ cd claude-code-nix
 
 # Build the default package (native binary)
 nix build
-
-# Build other variants
-nix build .#claude-code-node
-nix build .#claude-code-bun
 
 # Run tests
 nix run . -- --version

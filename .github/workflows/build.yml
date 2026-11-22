@@ -35,21 +35,13 @@ jobs:
       env:
         NIX_FIRST_BUILD_UID: 400
 
-    - name: Build all variants
+    - name: Build
       run: |
         echo "Building claude-code (native)..."
         nix build .#claude-code -o result-native
-        echo "Building claude-code-node..."
-        nix build .#claude-code-node -o result-node
-        echo "Building claude-code-bun..."
-        nix build .#claude-code-bun -o result-bun
 
-    - name: Test all variants
+    - name: Test
       run: |
         echo "Testing claude-code (native)..."
         ./result-native/bin/claude --version
-        echo "Testing claude-code-node..."
-        ./result-node/bin/claude-node --version
-        echo "Testing claude-code-bun..."
-        ./result-bun/bin/claude-bun --version
 
